@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Nalendra Jatayu | Developer",
   description: "Portfolio of Nalendra Jatayu, a skilled developer specializing in mobile, web, and game development.",
   icons: {
-    icon: '/logos/logo_nln_black.png',
+    icon: { url: '/logos/logo_nln_black.png', type: 'image/png' },
   },
 };
 
