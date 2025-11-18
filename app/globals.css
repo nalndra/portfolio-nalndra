@@ -1,0 +1,383 @@
+@import "tailwindcss";
+
+:root {
+  /* Monochrome theme: Black-Gray-Light with low saturation blue accent */
+  /* exact hex tokens */
+  --color-hex-primary: #0F0F0F;      /* Very dark gray/black background */
+  --color-hex-secondary: #1A1A1E;    /* Dark gray surface */
+  --color-hex-accent: #4A5568;       /* Low saturation blue-gray accent */
+  --color-hex-light: #E8EAED;        /* Light gray text */
+
+  /* exact rgb tokens (comma-separated for use in rgba()) */
+  --primary-rgb: 15,15,15;           /* rgb(15, 15, 15) */
+  --secondary-rgb: 26,26,30;         /* rgb(26, 26, 30) */
+  --accent-rgb: 74,85,104;           /* rgb(74, 85, 104) - blue-gray */
+  --light-rgb: 232,234,237;          /* rgb(232, 234, 237) */
+
+  /* convenience vars used across the app */
+  --primary: var(--color-hex-primary);
+  --secondary: var(--color-hex-secondary);
+  --accent: var(--color-hex-accent);
+  --light: var(--color-hex-light);
+  --surface: rgb(var(--primary-rgb));
+  --text-primary: var(--light);
+  --text-secondary: rgba(var(--light-rgb), 0.7);
+}
+
+body {
+  background: var(--primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+  margin: 0;
+  font-weight: 300;
+  letter-spacing: 0.3px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  transition: background-color 0.6s ease, color 0.6s ease;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 300;
+  letter-spacing: -0.5px;
+  color: var(--light);
+}
+
+h1 {
+  font-size: 4rem;
+  font-weight: 200;
+  letter-spacing: -1.5px;
+}
+
+h2 {
+  font-size: 2.5rem;
+  font-weight: 200;
+  letter-spacing: -1px;
+  margin-bottom: 1rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
+}
+
+a:hover {
+  color: var(--light);
+  border-bottom-color: var(--accent);
+}
+
+/* Full-screen sections */
+.site-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 80px 32px;
+  background: var(--primary);
+}
+
+.site-section#contact {
+  padding: 120px 16px;
+}
+
+.section-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.site-section#about .section-inner {
+  margin: 0;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-left: 80px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .site-section {
+    padding: 60px 16px;
+    min-height: 100svh; /* Use svh for better mobile support */
+  }
+
+  .site-section#about .section-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 60px;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    letter-spacing: -1px;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    letter-spacing: -0.5px;
+  }
+
+  .luxury-card {
+    padding: 24px;
+  }
+
+  .project-card {
+    padding: 20px;
+  }
+
+  .tech-badge {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+
+  input, textarea {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-section {
+    padding: 40px 12px;
+  }
+
+  .site-section#about .section-inner {
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 40px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* simple utility for center */
+.center-full {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* Luxury card styling */
+.luxury-card {
+  background: var(--secondary);
+  border-radius: 2px;
+  padding: 48px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  backdrop-filter: blur(10px);
+}
+
+/* Button styling */
+.btn-primary {
+  background: var(--accent);
+  color: var(--light);
+  padding: 14px 32px;
+  border-radius: 2px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: rgba(var(--accent-rgb), 1.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
+}
+
+/* Tech badge */
+.tech-badge {
+  display: inline-block;
+  padding: 8px 20px;
+  background: rgba(var(--accent-rgb), 0.15);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  border-radius: 2px;
+  color: var(--light);
+  font-size: 0.9rem;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.tech-badge:hover {
+  background: rgba(var(--accent-rgb), 0.25);
+  border-color: rgba(var(--accent-rgb), 0.5);
+}
+
+/* Input styling */
+input, textarea {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--secondary);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
+  border-radius: 2px;
+  color: var(--light);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 300;
+  transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+}
+
+/* Project card */
+.project-card {
+  padding: 32px;
+  background: var(--secondary);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.project-card:hover {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.project-card h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--light);
+}
+
+.project-card p {
+  margin: 0 0 16px 0;
+  color: var(--text-secondary);
+}
+
+/* Navigation Link Hover Effect */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--light));
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--accent) !important;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Liquid Glass Navbar Effect */
+.liquid-glass-navbar {
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass-navbar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(var(--accent-rgb), 0.1) 0%,
+    rgba(var(--secondary-rgb), 0.05) 20%,
+    transparent 50%
+  );
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+  will-change: opacity;
+}
+
+.liquid-glass-navbar:hover::before {
+  opacity: 0.5;
+}
+
+.liquid-glass-navbar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--light-rgb), 0.05) 0%,
+    rgba(var(--accent-rgb), 0.03) 25%,
+    transparent 50%,
+    rgba(var(--accent-rgb), 0.05) 75%,
+    rgba(var(--secondary-rgb), 0.1) 100%
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* Intro Animation */
+.intro-overlay {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.intro-logo {
+  animation: logoFloat 2s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1) translateY(0);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1) translateY(-10px);
+  }
+}
+
+.intro-animating .intro-logo {
+  animation: none;
+}
+
+/* Project Grid Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
