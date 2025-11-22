@@ -22,6 +22,9 @@ export default function ModelViewer() {
   const rafRef = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [gyroPermissionGranted, setGyroPermissionGranted] = useState(false);
+  const requestGyroRef = useRef<(() => void) | undefined>(undefined);
 
   useEffect(() => {
     if (!containerRef.current || !canvasRef.current) return;
@@ -30,7 +33,7 @@ export default function ModelViewer() {
 
     // Check if mobile - single declaration at the top
     const checkIsMobile = () => window.innerWidth < 768;
-    let isMobile = checkIsMobile();
+    setIsMobile(checkIsMobile());
 
     const scene = new THREE.Scene();
     scene.background = null; // transparent for overlay
@@ -135,7 +138,48 @@ export default function ModelViewer() {
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("pointerleave", onPointerLeave, { passive: true });
 
-    // load model with loading states
+    // Gyroscope support for mobile
+    let gyroEnabled = false;
+    let gyroHandler: ((event: DeviceOrientationEvent) => void) | null = null;
+
+    function enableGyro() {
+      if (gyroEnabled) return;
+      gyroEnabled = true;
+      setGyroPermissionGranted(true);
+
+      gyroHandler = (event) => {
+        if (!event.beta || !event.gamma) return;
+
+        const tiltX = THREE.MathUtils.degToRad(event.beta);   // miring depan-belakang
+        const tiltY = THREE.MathUtils.degToRad(event.gamma);  // miring kiri-kanan
+
+        // Sesuaikan sensitivity biar smooth dan minimal
+        const sensitivity = 0.02;
+
+        targetX = tiltX * sensitivity;
+        targetY = tiltY * sensitivity;
+      };
+
+      window.addEventListener("deviceorientation", gyroHandler);
+    }
+
+    // iOS butuh permission manual
+    function requestGyroPermission() {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
+        (DeviceOrientationEvent as any)
+          .requestPermission()
+          .then((state: any) => {
+            if (state === "granted") {
+              enableGyro();
+            }
+          })
+          .catch(console.error);
+      } else {
+        enableGyro();
+      }
+    }
+
+    requestGyroRef.current = requestGyroPermission;    // load model with loading states
     setIsLoading(true);
     setHasError(false);
     const loader = new GLTFLoader();
@@ -189,7 +233,7 @@ export default function ModelViewer() {
         camera.updateProjectionMatrix();
         
         // Update mobile status and model scale/position on resize
-        isMobile = checkIsMobile();
+        setIsMobile(checkIsMobile());
         
         // Update camera FOV and position
         const newFOV = isMobile ? (w < 480 ? 55 : 50) : 45;
@@ -256,6 +300,9 @@ export default function ModelViewer() {
       clearTimeout(resizeTimeout);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerleave", onPointerLeave);
+      if (gyroHandler) {
+        window.removeEventListener("deviceorientation", gyroHandler);
+      }
       window.removeEventListener("resize", onResize);
       
       // dispose controls
@@ -301,6 +348,14 @@ export default function ModelViewer() {
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
           <div className="text-white/60 text-sm">Loading 3D model...</div>
         </div>
+      )}
+      {isMobile && !gyroPermissionGranted && (
+        <button
+          onClick={() => requestGyroRef.current?.()}
+          className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm"
+        >
+          Enable Gyroscope
+        </button>
       )}
     </div>
   );
