@@ -360,6 +360,17 @@ export default function ModelViewer() {
         .animate-spin-slow {
           animation: spin-slow 3s linear infinite;
         }
+        .pulse-glow {
+          background: radial-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.0) 60%);
+          filter: blur(12px);
+          opacity: 0.5;
+          animation: pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse {
+          0% { opacity: 0.35; }
+          50% { opacity: 0.75; }
+          100% { opacity: 0.35; }
+        }
       `}</style>
       <canvas ref={canvasRef} className="w-full h-full" />
       {isLoading && (
@@ -370,10 +381,10 @@ export default function ModelViewer() {
       {isMobile && !gyroPermissionGranted && (
         <div className="absolute bottom-4 right-4">
           <div className="relative">
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/20 to-white/40 blur-sm animate-spin-slow"></div>
+            <span className="pulse-glow absolute inset-0 rounded-lg pointer-events-none"></span>
             <button
               onClick={() => requestGyroRef.current?.()}
-              className="relative bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
+              className="relative z-10 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
             >
               Enable Gyroscope
             </button>

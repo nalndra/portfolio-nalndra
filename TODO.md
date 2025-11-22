@@ -1,8 +1,11 @@
-# TODO: Fix Mobile Carousel in Projects Component
+# Refactor Gyroscope Button in ModelViewer.tsx
 
-- [ ] Center the mobile carousel properly
-- [ ] Make thumbnails and videos adaptive (use objectFit: 'contain' on mobile to avoid cropping)
-- [ ] Modify onCardClick to stop auto swipe instead of toggle
-- [ ] Adjust carousel animation easing to smoother transition
-- [ ] Improve outline/border styling
-- [ ] Adjust title and description font sizes for better mobile responsiveness
+## Tasks
+- [ ] Update gyroscope button styling to transparent like TechStack buttons (rgba backgrounds, backdrop blur, white/light colors)
+- [ ] Ensure button remains visible on dark model viewer background
+- [ ] Verify no duplicate buttons exist (already confirmed via search)
+
+## Status
+- [x] Analysis complete
+- [x] Plan approved by user
+- [ ] Implementation in progress
