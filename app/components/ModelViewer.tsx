@@ -31,9 +31,9 @@ export default function ModelViewer() {
     const container = containerRef.current;
     const canvas = canvasRef.current;
 
-    // Check if mobile - single declaration at the top
+    // Check if mobile - computed locally
     const checkIsMobile = () => window.innerWidth < 768;
-    setIsMobile(checkIsMobile());
+    const isMobile = checkIsMobile();
 
     const scene = new THREE.Scene();
     scene.background = null; // transparent for overlay
@@ -112,7 +112,6 @@ export default function ModelViewer() {
     // track pointer and target rotation
     let targetX = 0;
     let targetY = 0;
-    let targetZ = 0;
     let lastPointerUpdateTime = 0;
     const POINTER_THROTTLE_MS = 16; // ~60fps throttle
 
@@ -133,7 +132,6 @@ export default function ModelViewer() {
     function onPointerLeave() {
       targetX = 0;
       targetY = 0;
-      targetZ = 0;
     }
 
     // Listen on window for full-page cursor tracking with passive flag
@@ -150,19 +148,15 @@ export default function ModelViewer() {
       setGyroPermissionGranted(true);
 
       gyroHandler = (event) => {
-        console.log('Gyro event:', event.beta, event.gamma, event.alpha);
-        if (!event.beta || !event.gamma || event.alpha === null) return;
+        if (event.beta == null || event.gamma == null) return;
 
-        const tiltX = THREE.MathUtils.degToRad(event.beta);   // miring depan-belakang
-        const tiltY = THREE.MathUtils.degToRad(event.gamma);  // miring kiri-kanan
-        const tiltZ = THREE.MathUtils.degToRad(event.alpha);  // rotasi compass
+        const tiltX = THREE.MathUtils.degToRad(event.beta);
+        const tiltY = THREE.MathUtils.degToRad(event.gamma);
 
-        // Sesuaikan sensitivity biar smooth dan minimal
-        const sensitivity = 0.2;
+        const sensitivity = 0.02;
 
         targetX = tiltX * sensitivity;
         targetY = -tiltY * sensitivity;
-        targetZ = tiltZ * sensitivity;
       };
 
       window.addEventListener("deviceorientation", gyroHandler);
@@ -238,10 +232,10 @@ export default function ModelViewer() {
         camera.updateProjectionMatrix();
         
         // Update mobile status and model scale/position on resize
-        setIsMobile(checkIsMobile());
+        const isMobileNow = checkIsMobile();
         
         // Update camera FOV and position
-        const newFOV = isMobile ? (w < 480 ? 55 : 50) : 45;
+        const newFOV = isMobileNow ? (w < 480 ? 55 : 50) : 45;
         if (camera.fov !== newFOV) {
           camera.fov = newFOV;
           camera.updateProjectionMatrix();
@@ -286,11 +280,9 @@ export default function ModelViewer() {
       if (model) {
         const curX = model.rotation.x;
         const curY = model.rotation.y;
-        const curZ = model.rotation.z;
         const t = 1 - Math.exp(-6 * dt); // smoothing factor
         model.rotation.x = THREE.MathUtils.lerp(curX, targetX, t);
         model.rotation.y = THREE.MathUtils.lerp(curY, targetY, t);
-        model.rotation.z = THREE.MathUtils.lerp(curZ, targetZ, t);
       }
 
       if (renderer && camera && scene) {
@@ -350,6 +342,15 @@ export default function ModelViewer() {
 
   return (
     <div ref={containerRef} className="w-full h-full relative">
+      <style>{`
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+      `}</style>
       <canvas ref={canvasRef} className="w-full h-full" />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
@@ -357,12 +358,17 @@ export default function ModelViewer() {
         </div>
       )}
       {isMobile && !gyroPermissionGranted && (
-        <button
-          onClick={() => requestGyroRef.current?.()}
-          className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/10"
-        >
-          Enable Gyroscope
-        </button>
+        <div className="absolute bottom-4 right-4 animate-spin-slow">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/20 to-white/40 blur-sm animate-pulse"></div>
+            <button
+              onClick={() => requestGyroRef.current?.()}
+              className="relative bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
+            >
+              Enable Gyroscope
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
