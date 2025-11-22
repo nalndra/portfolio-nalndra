@@ -112,6 +112,7 @@ export default function ModelViewer() {
     // track pointer and target rotation
     let targetX = 0;
     let targetY = 0;
+    let targetZ = 0;
     let lastPointerUpdateTime = 0;
     const POINTER_THROTTLE_MS = 16; // ~60fps throttle
 
@@ -132,6 +133,7 @@ export default function ModelViewer() {
     function onPointerLeave() {
       targetX = 0;
       targetY = 0;
+      targetZ = 0;
     }
 
     // Listen on window for full-page cursor tracking with passive flag
@@ -148,17 +150,19 @@ export default function ModelViewer() {
       setGyroPermissionGranted(true);
 
       gyroHandler = (event) => {
-        console.log('Gyro event:', event.beta, event.gamma);
-        if (!event.beta || !event.gamma) return;
+        console.log('Gyro event:', event.beta, event.gamma, event.alpha);
+        if (!event.beta || !event.gamma || event.alpha === null) return;
 
         const tiltX = THREE.MathUtils.degToRad(event.beta);   // miring depan-belakang
         const tiltY = THREE.MathUtils.degToRad(event.gamma);  // miring kiri-kanan
+        const tiltZ = THREE.MathUtils.degToRad(event.alpha);  // rotasi compass
 
         // Sesuaikan sensitivity biar smooth dan minimal
         const sensitivity = 0.2;
 
         targetX = tiltX * sensitivity;
         targetY = -tiltY * sensitivity;
+        targetZ = tiltZ * sensitivity;
       };
 
       window.addEventListener("deviceorientation", gyroHandler);
@@ -282,9 +286,11 @@ export default function ModelViewer() {
       if (model) {
         const curX = model.rotation.x;
         const curY = model.rotation.y;
+        const curZ = model.rotation.z;
         const t = 1 - Math.exp(-6 * dt); // smoothing factor
         model.rotation.x = THREE.MathUtils.lerp(curX, targetX, t);
         model.rotation.y = THREE.MathUtils.lerp(curY, targetY, t);
+        model.rotation.z = THREE.MathUtils.lerp(curZ, targetZ, t);
       }
 
       if (renderer && camera && scene) {
