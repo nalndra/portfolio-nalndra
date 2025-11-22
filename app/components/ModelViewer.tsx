@@ -148,16 +148,17 @@ export default function ModelViewer() {
       setGyroPermissionGranted(true);
 
       gyroHandler = (event) => {
+        console.log('Gyro event:', event.beta, event.gamma);
         if (!event.beta || !event.gamma) return;
 
         const tiltX = THREE.MathUtils.degToRad(event.beta);   // miring depan-belakang
         const tiltY = THREE.MathUtils.degToRad(event.gamma);  // miring kiri-kanan
 
         // Sesuaikan sensitivity biar smooth dan minimal
-        const sensitivity = 0.02;
+        const sensitivity = 0.1;
 
         targetX = tiltX * sensitivity;
-        targetY = tiltY * sensitivity;
+        targetY = -tiltY * sensitivity;
       };
 
       window.addEventListener("deviceorientation", gyroHandler);
