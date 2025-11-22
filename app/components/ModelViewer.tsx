@@ -368,9 +368,9 @@ export default function ModelViewer() {
         </div>
       )}
       {isMobile && !gyroPermissionGranted && (
-        <div className="absolute bottom-4 right-4 animate-spin-slow">
+        <div className="absolute bottom-4 right-4">
           <div className="relative">
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/20 to-white/40 blur-sm animate-pulse"></div>
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-white/20 to-white/40 blur-sm animate-spin-slow"></div>
             <button
               onClick={() => requestGyroRef.current?.()}
               className="relative bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/30"
