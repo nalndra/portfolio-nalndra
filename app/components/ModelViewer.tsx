@@ -155,7 +155,7 @@ export default function ModelViewer() {
         const tiltY = THREE.MathUtils.degToRad(event.gamma);  // miring kiri-kanan
 
         // Sesuaikan sensitivity biar smooth dan minimal
-        const sensitivity = 0.1;
+        const sensitivity = 0.2;
 
         targetX = tiltX * sensitivity;
         targetY = -tiltY * sensitivity;
@@ -353,7 +353,7 @@ export default function ModelViewer() {
       {isMobile && !gyroPermissionGranted && (
         <button
           onClick={() => requestGyroRef.current?.()}
-          className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm"
+          className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/10"
         >
           Enable Gyroscope
         </button>
