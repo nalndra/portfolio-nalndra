@@ -26,6 +26,16 @@ export default function ModelViewer() {
   const [gyroPermissionGranted, setGyroPermissionGranted] = useState(false);
   const requestGyroRef = useRef<(() => void) | undefined>(undefined);
 
+  // Separate effect for mobile detection
+  useEffect(() => {
+    const checkIsMobile = () => window.innerWidth < 768;
+    setIsMobile(checkIsMobile());
+    
+    const handleResize = () => setIsMobile(checkIsMobile());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     if (!containerRef.current || !canvasRef.current) return;
     const container = containerRef.current;
