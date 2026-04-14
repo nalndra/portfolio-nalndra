@@ -23,19 +23,38 @@ export default function Hero() {
 
   const [currentRole, setCurrentRole] = useState(0);
   const [currentSkill, setCurrentSkill] = useState(0);
+  const [displayRole, setDisplayRole] = useState(roles[0]);
+  const [displaySkill, setDisplaySkill] = useState(softSkills[0]);
+  const [isRoleBlinking, setIsRoleBlinking] = useState(false);
+  const [isSkillBlinking, setIsSkillBlinking] = useState(false);
 
   useEffect(() => {
-    const roleInterval = setInterval(() => {
-      setCurrentRole((prev) => (prev + 1) % roles.length);
-    }, 3000);
-    return () => clearInterval(roleInterval);
-  }, []);
+    const interval = setInterval(() => {
+      // Start blink for both simultaneously
+      setIsRoleBlinking(true);
+      setIsSkillBlinking(true);
 
-  useEffect(() => {
-    const skillInterval = setInterval(() => {
-      setCurrentSkill((prev) => (prev + 1) % softSkills.length);
-    }, 3000);
-    return () => clearInterval(skillInterval);
+      setTimeout(() => {
+        // Change both texts while invisible
+        setCurrentRole((prev) => {
+          const next = (prev + 1) % roles.length;
+          setDisplayRole(roles[next]);
+          return next;
+        });
+
+        setCurrentSkill((prev) => {
+          const next = (prev + 1) % softSkills.length;
+          setDisplaySkill(softSkills[next]);
+          return next;
+        });
+
+        // Fade in both
+        setIsRoleBlinking(false);
+        setIsSkillBlinking(false);
+      }, 300); // Must match transition duration (0.3s)
+    }, 6000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -89,7 +108,7 @@ export default function Hero() {
       />
 
       {/* Content */}
-      <div className="section-inner relative z-10 center-full" style={{ flexDirection: "column", gap: 24, marginTop: "-90px", zIndex: 10 }}>
+      <div className="section-inner relative z-10 center-full" style={{ flexDirection: "column", gap: 24, marginTop: "80px", zIndex: 10 }}>
         <h1 className="text-4xl md:text-5xl lg:text-6xl m-0 font-extralight tracking-tight leading-tight text-[#EAEFEF]" 
             style={{ textShadow: "0 2px 8px rgba(0, 0, 0, 0.5)" }}>
           NALENDRA JATAYU
@@ -122,43 +141,34 @@ export default function Hero() {
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-24 mt-2 min-h-[60px]">
           {/* Left - Roles */}
           <div className="text-base md:text-xl lg:text-2xl text-[rgba(234,239,239,0.8)] font-light tracking-wide text-center md:text-right"
-               style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)" }}>
+               style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)", minHeight: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{
               display: "inline-block",
-              animation: `fadeInOut 3s ease-in-out infinite`,
+              opacity: isRoleBlinking ? 0 : 1,
+              transition: "opacity 0.3s ease-in-out",
+              willChange: "opacity",
             }}>
-              &lt;{roles[currentRole]}&gt;
+              &lt;{displayRole}&gt;
             </span>
           </div>
 
           {/* Right - Soft Skills */}
           <div className="text-base md:text-xl lg:text-2xl text-[rgba(234,239,239,0.8)] font-light tracking-wide text-center md:text-left"
-               style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)" }}>
+               style={{ textShadow: "0 1px 4px rgba(0, 0, 0, 0.4)", minHeight: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{
               display: "inline-block",
-              animation: `fadeInOut 3s ease-in-out infinite`,
+              opacity: isSkillBlinking ? 0 : 1,
+              transition: "opacity 0.3s ease-in-out",
+              willChange: "opacity",
             }}>
-              &lt;{softSkills[currentSkill]}&gt;
+              &lt;{displaySkill}&gt;
             </span>
           </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes fadeInOut {
-          0% {
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
+        /* Styles if needed */
       `}</style>
     </section>
   );

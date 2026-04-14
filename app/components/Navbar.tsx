@@ -75,7 +75,6 @@ export default function Navbar() {
               {[
                 { id: "home", label: "Home" },
                 { id: "about", label: "About" },
-                { id: "tech", label: "Tech" },
                 { id: "projects", label: "Projects" },
                 { id: "contact", label: "Contact" },
               ].map((item) => (
@@ -129,7 +128,6 @@ export default function Navbar() {
           {[
             { id: "home", label: "Home" },
             { id: "about", label: "About" },
-            { id: "tech", label: "Tech" },
             { id: "projects", label: "Projects" },
             { id: "contact", label: "Contact" },
           ].map((item, idx) => (
@@ -138,7 +136,7 @@ export default function Navbar() {
                 onClick={() => scrollToSection(item.id)}
                 className="w-full text-left bg-transparent border-0 text-[var(--light)] text-base font-normal tracking-wide cursor-pointer py-4 px-6 transition-all duration-300 hover:bg-[rgba(var(--light-rgb),0.05)]"
                 style={{
-                  borderBottom: idx < 4 ? "1px solid rgba(var(--light-rgb), 0.05)" : "none",
+                  borderBottom: idx < 3 ? "1px solid rgba(var(--light-rgb), 0.05)" : "none",
                 }}
               >
                 {item.label}

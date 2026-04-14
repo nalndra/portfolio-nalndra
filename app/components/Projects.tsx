@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+
 
 const projects = [
   {
     id: 1,
     title: "Peak of Ceres",
-    category: "Game Project",
+    category: "Roblox Game Project",
     description: "Skill-based Roblox climbing game with dynamic obstacles and a progressive journey to reach the peak of Ceres.",
     link: "https://www.roblox.com/games/79933209909543/Mount-Ceres-Peak-of-Ceres-ALPHA",
     imageUrl: "/logos/peakofcereslogo.jpg",
@@ -16,79 +17,74 @@ const projects = [
   {
     id: 2,
     title: "GiziAI Kaisa",
-    category: "Nutrition AI Chatbot",
+    category: "AI based nutrition tracker and chatbot",
     description: "AI-powered nutrition assistant that provides personalized diet recommendations and meal planning.",
-    link: "/private-repo",
+    link: "https://github.com/nalndra/GiziAI",
     imageUrl: "/logos/GiziAILogo.png",
-    videoUrl: "/videos/stars.mp4", // Placeholder - ganti dengan video Kaisa
+    videoUrl: "/videos/stars.mp4",
   },
   {
     id: 3,
-    title: "Simple Crowdfunding",
-    category: "CLI Program",
-    description: "Command-line interface tool for managing crowdfunding campaigns with ease and efficiency.",
-    link: "https://github.com/nalndra/Tubes-Crowdfunding-Sederhana-Go",
-    imageUrl: "/logos/crowdfundsimpleLogo.png",
-    videoUrl: "/videos/stars.mp4", // Placeholder - ganti dengan video Crowdfunding
+    title: "Nullify",
+    category: "GameJam submission",
+    description: "Content moderation simulation where you balance public trust and app rating by reviewing posts. Survive 7 days of increasing chaos.",
+    link: "https://nalndra.itch.io/nullify",
+    imageUrl: "/logos/nullify_logo.png",
+    videoUrl: "/videos/nullifyclip.mp4",
   },
   {
     id: 4,
     title: "RE:member",
-    category: "Retro Game",
+    category: "gamified portfolio web game",
     description: "A retro-styled game with simple yet deep lore about life's memories and experiences. Explore the journey through pixelated nostalgia.",
-    link: "/private-repo",
+    link: "https://github.com/nalndra/REmember-Child-of-Memory",
     imageUrl: "/logos/ChildofMemory.png",
-    videoUrl: "/videos/stars.mp4", // Placeholder - ganti dengan video RE:member
+    videoUrl: "/videos/stars.mp4",
   },
 ];
 
-function Carousel({ items, activeMobileId, setActiveMobileId }: { items: typeof projects, activeMobileId: number | null, setActiveMobileId: (id: number | null) => void }) {
+// ─── Carousel (Mobile) ────────────────────────────────────────────────────────
+
+function Carousel({
+  items,
+  activeMobileId,
+  setActiveMobileId,
+}: {
+  items: typeof projects;
+  activeMobileId: number | null;
+  setActiveMobileId: (id: number | null) => void;
+}) {
   const [index, setIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const inactivityTimerRef = useRef<number | null>(null);
-  const [isPaused, setIsPaused] = useState(false);
+  const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [width, setWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setWidth(containerRef.current.offsetWidth);
-      }
-    };
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    const update = () => containerRef.current && setWidth(containerRef.current.offsetWidth);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
-  const resetInactivityTimer = () => {
-    if (inactivityTimerRef.current) {
-      window.clearTimeout(inactivityTimerRef.current);
-    }
-    if (isPaused) return;
-    inactivityTimerRef.current = window.setTimeout(() => {
-      setIndex((prev) => (prev + 1) % items.length);
-    }, 10000);
-  };
+  const scheduleAuto = useCallback(() => {
+    if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+    autoTimerRef.current = setTimeout(
+      () => setIndex((p) => (p + 1) % items.length),
+      10_000
+    );
+  }, [items.length]);
 
   useEffect(() => {
-    resetInactivityTimer();
-    return () => {
-      if (inactivityTimerRef.current) window.clearTimeout(inactivityTimerRef.current);
-    };
-  }, [index, isPaused]);
+    scheduleAuto();
+    return () => { if (autoTimerRef.current) clearTimeout(autoTimerRef.current); };
+  }, [index, scheduleAuto]);
 
-  const handleSwipe = (direction: string) => {
-    setIsPaused(true);
-    if (inactivityTimerRef.current) window.clearTimeout(inactivityTimerRef.current);
-    if (direction === "left" && index < items.length - 1) setIndex(index + 1);
-    if (direction === "right" && index > 0) setIndex(index - 1);
-  };
-
-  const goToIndex = (idx: number) => {
-    setIsPaused(true);
-    if (inactivityTimerRef.current) window.clearTimeout(inactivityTimerRef.current);
-    setIndex(idx);
+  const go = (dir: "left" | "right") => {
+    if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+    setIndex((p) =>
+      dir === "left" ? Math.min(p + 1, items.length - 1) : Math.max(p - 1, 0)
+    );
   };
 
   return (
@@ -96,36 +92,32 @@ function Carousel({ items, activeMobileId, setActiveMobileId }: { items: typeof 
       <motion.div
         ref={containerRef}
         className="flex"
-        style={{ willChange: 'transform' }}
         drag="x"
         dragConstraints={{ left: -width * (items.length - 1), right: 0 }}
         dragElastic={0.2}
         onDragStart={() => setIsDragging(true)}
-        onDragEnd={(e, info) => {
+        onDragEnd={(_, info) => {
           setIsDragging(false);
-          if (info.offset.x < -50) handleSwipe("left");
-          if (info.offset.x > 50) handleSwipe("right");
+          if (info.offset.x < -50) go("left");
+          if (info.offset.x > 50) go("right");
         }}
         animate={{ x: -index * width }}
         transition={{ type: "tween", duration: 0.35, ease: "easeOut" }}
       >
         {items.map((item, i) => (
-          <div key={i} className="min-w-full flex items-center justify-center px-2" style={{ height: 420 }}>
+          <div
+            key={i}
+            className="min-w-full flex items-center justify-center px-2"
+            style={{ height: 420 }}
+          >
             <ProjectCard
               project={item}
-              index={item.id - 1}
-              hoveredId={null}
-              onHover={() => {}}
-              isMobile={true}
+              isMobile
               isActive={i === index}
               currentIndex={index}
               isDragging={isDragging}
               activeMobileId={activeMobileId}
               setActiveMobileId={setActiveMobileId}
-              onCardClick={() => {
-                setIsPaused(true);
-                if (inactivityTimerRef.current) window.clearTimeout(inactivityTimerRef.current);
-              }}
             />
           </div>
         ))}
@@ -135,7 +127,10 @@ function Carousel({ items, activeMobileId, setActiveMobileId }: { items: typeof 
         {items.map((_, i) => (
           <button
             key={i}
-            onClick={() => goToIndex(i)}
+            onClick={() => {
+              if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+              setIndex(i);
+            }}
             className={`w-1.5 h-1.5 rounded-full transition-all border ${
               i === index ? "bg-white border-white" : "border-gray-500 bg-transparent"
             }`}
@@ -146,71 +141,60 @@ function Carousel({ items, activeMobileId, setActiveMobileId }: { items: typeof 
   );
 }
 
+// ─── Projects Section ─────────────────────────────────────────────────────────
+
 export default function Projects() {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [activeMobileId, setActiveMobileId] = useState<number | null>(null);
-
-  const getGridTemplateForRow = (rowIndex: number, id: number | null) => {
-    if (!id) return '1fr 1fr';
-    
-    const hoveredRow = Math.floor((id - 1) / 2);
-    if (rowIndex !== hoveredRow) return '1fr 1fr'; // Cards not in hovered row stay normal
-    
-    const col = (id - 1) % 2; // 0 = left column, 1 = right column
-    return col === 0 ? '2fr 1fr' : '1fr 2fr';
-  };
-
-  // Group projects by rows (2 per row)
-  const rows = [];
-  for (let i = 0; i < projects.length; i += 2) {
-    rows.push(projects.slice(i, i + 2));
-  }
-
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Two rows of 2 projects each
+  const rows = [projects.slice(0, 2), projects.slice(2, 4)];
+
+  const rowTemplate = (rowIndex: number) => {
+    if (!hoveredId) return "1fr 1fr";
+    const hoveredRow = Math.floor((hoveredId - 1) / 2);
+    if (rowIndex !== hoveredRow) return "1fr 1fr";
+    const col = (hoveredId - 1) % 2;
+    return col === 0 ? "1.8fr 1fr" : "1fr 1.8fr";
+  };
 
   return (
     <section id="projects" className="site-section relative">
-      {/* Gradient Background - Black to Current Color (Ultra Smooth & Seamless) */}
+      {/* Background gradients */}
       <div
+        className="absolute inset-0 pointer-events-none"
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          background: "linear-gradient(to bottom, #000000 0%, rgba(0, 0, 0, 0.99) 5%, rgba(0, 0, 0, 0.98) 8%, rgba(2, 2, 2, 0.96) 11%, rgba(4, 4, 4, 0.94) 14%, rgba(6, 6, 6, 0.92) 17%, rgba(8, 8, 8, 0.89) 20%, rgba(10, 10, 10, 0.86) 23%, rgba(11, 11, 11, 0.83) 26%, rgba(12, 12, 12, 0.79) 30%, rgba(13, 13, 13, 0.75) 34%, rgba(14, 14, 14, 0.7) 38%, rgba(15, 15, 15, 0.65) 42%, rgba(15, 15, 15, 0.58) 47%, rgba(15, 15, 15, 0.5) 52%, rgba(15, 15, 15, 0.42) 58%, rgba(15, 15, 15, 0.33) 64%, rgba(15, 15, 15, 0.24) 70%, rgba(15, 15, 15, 0.16) 76%, rgba(15, 15, 15, 0.1) 82%, rgba(15, 15, 15, 0.05) 88%, transparent 94%)",
+          background:
+            "linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.85) 30%, rgba(15,15,15,0.4) 60%, transparent 94%)",
           zIndex: 0,
-          pointerEvents: "none",
         }}
       />
-
-      {/* Top Vignette */}
       <div
+        className="absolute top-0 left-0 w-full pointer-events-none"
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
           height: "20%",
-          background: "linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%)",
+          background: "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)",
           zIndex: 1,
-          pointerEvents: "none",
         }}
       />
 
       <div className="section-inner relative" style={{ zIndex: 2 }}>
-        <h2 className="text-center mb-20 text-3xl md:text-4xl font-extralight text-[var(--light)]">
-          Featured Projects
+        <h2 className="text-center mb-4 text-3xl md:text-4xl font-extralight text-[var(--light)]">
+          Personal Projects
         </h2>
+        <p className="text-center mb-20 text-sm md:text-base text-gray-400 max-w-2xl mx-auto">
+          Explore my creative journey through innovative game and AI projects.
+        </p>
 
-        {/* Desktop/grid layout */}
+        {/* Desktop grid */}
         {!isMobile && (
           <div className="flex flex-col gap-6 max-w-[1000px] mx-auto">
             {rows.map((rowProjects, rowIndex) => (
@@ -218,15 +202,16 @@ export default function Projects() {
                 key={rowIndex}
                 className="grid gap-6"
                 style={{
-                  gridTemplateColumns: getGridTemplateForRow(rowIndex, hoveredId),
-                  transition: 'grid-template-columns 0.5s ease-out',
+                  gridTemplateColumns: rowTemplate(rowIndex),
+                  transition: "grid-template-columns 0.32s cubic-bezier(0.4,0,0.2,1)",
+                  willChange: "grid-template-columns",
+                  transform: "translateZ(0)",
                 }}
               >
                 {rowProjects.map((project) => (
                   <ProjectCard
                     key={project.id}
                     project={project}
-                    index={project.id - 1}
                     hoveredId={hoveredId}
                     onHover={setHoveredId}
                     activeMobileId={activeMobileId}
@@ -238,21 +223,26 @@ export default function Projects() {
           </div>
         )}
 
+        {/* Mobile carousel */}
         {isMobile && (
-          <Carousel items={projects} activeMobileId={activeMobileId} setActiveMobileId={setActiveMobileId} />
+          <Carousel
+            items={projects}
+            activeMobileId={activeMobileId}
+            setActiveMobileId={setActiveMobileId}
+          />
         )}
       </div>
     </section>
   );
 }
 
+// ─── ProjectCard ──────────────────────────────────────────────────────────────
+
 function ProjectCard({
   project,
-  index,
   hoveredId,
   onHover,
   isMobile = false,
-  onCardClick,
   isActive = false,
   currentIndex,
   isDragging = false,
@@ -260,11 +250,9 @@ function ProjectCard({
   setActiveMobileId,
 }: {
   project: (typeof projects)[0];
-  index: number;
-  hoveredId: number | null;
-  onHover: (id: number | null) => void;
+  hoveredId?: number | null;
+  onHover?: (id: number | null) => void;
   isMobile?: boolean;
-  onCardClick?: () => void;
   isActive?: boolean;
   currentIndex?: number;
   isDragging?: boolean;
@@ -272,235 +260,295 @@ function ProjectCard({
   setActiveMobileId?: (id: number | null) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoPlayed, setVideoPlayed] = useState(false);
-  const isHovered = hoveredId === project.id;
-  const showVideo = isHovered || (isMobile && videoPlayed);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [videoVisible, setVideoVisible] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+
+  const isHovered = !isMobile && hoveredId === project.id;
   const isMobileActive = isMobile && activeMobileId === project.id;
-  
-  // Reset video when index changes
+  const showVideo = isHovered || isMobileActive;
+
+  // ── Preload video via IntersectionObserver ──────────────────────────────
   useEffect(() => {
-    if (isMobile && videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-      setVideoPlayed(false);
-    }
-    if (isMobile && setActiveMobileId) {
-      setActiveMobileId(null);
-    }
-  }, [currentIndex, isMobile]);
-  
-  // Only shrink cards in the same row
-  const hoveredRow = hoveredId ? Math.floor((hoveredId - 1) / 2) : null;
-  const currentRow = Math.floor(index / 2);
-  const isShrunk = hoveredId !== null && hoveredId !== project.id && hoveredRow === currentRow;
-  
-  const handleMouseEnter = () => {
-    onHover(project.id);
-    if (!isMobile && videoRef.current) {
-      videoRef.current.play().catch(() => {
-        // Ignore autoplay errors
-      });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    onHover(null);
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  };
-
-  const handleCardClick = () => {
-    if (onCardClick) onCardClick();
-    if (isMobile && setActiveMobileId) {
-      if (videoPlayed) {
-        // Stop video and reset UI
-        if (videoRef.current) {
-          videoRef.current.pause();
-          setVideoPlayed(false);
+    const el = cardRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Kick off metadata load as soon as card is near viewport
+          if (videoRef.current && videoRef.current.readyState === 0) {
+            videoRef.current.preload = "metadata";
+            videoRef.current.load();
+          }
         }
-        setActiveMobileId(null);
+      },
+      { rootMargin: "200px", threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // ── Play / pause on hover or mobile-tap ────────────────────────────────
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+
+    if (showVideo) {
+      // Reset video to start and play
+      vid.currentTime = 0;
+      
+      // Ensure enough is loaded, then play
+      const tryPlay = () => {
+        vid.play().catch(() => {
+          // If not ready yet, wait for canplay
+          vid.addEventListener("canplay", () => vid.play().catch(() => {}), { once: true });
+        });
+      };
+
+      if (vid.readyState >= 3) {
+        tryPlay();
       } else {
-        // Start video and activate UI
-        setActiveMobileId(project.id);
-        if (videoRef.current) {
-          videoRef.current.play().catch(() => {});
-          setVideoPlayed(true);
-        }
+        // Upgrade preload to full and wait
+        vid.preload = "auto";
+        vid.load();
+        vid.addEventListener("canplay", () => vid.play().catch(() => {}), { once: true });
       }
+
+      setVideoVisible(true);
+    } else {
+      vid.pause();
+      vid.currentTime = 0;
+      setVideoVisible(false);
+    }
+  }, [showVideo]);
+
+  // ── Reset on carousel swipe ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!isMobile) return;
+    videoRef.current?.pause();
+    if (videoRef.current) videoRef.current.currentTime = 0;
+    setVideoVisible(false);
+    setActiveMobileId?.(null);
+  }, [currentIndex]);
+
+  const handleMouseEnter = () => {
+    onHover?.(project.id);
+  };
+  const handleMouseLeave = () => {
+    onHover?.(null);
+  };
+  const handleClick = () => {
+    if (!isMobile || !setActiveMobileId) return;
+    if (isMobileActive) {
+      setActiveMobileId(null);
+    } else {
+      setActiveMobileId(project.id);
     }
   };
 
   return (
     <div
-      className="relative overflow-hidden rounded-lg transition-all duration-500 ease-out cursor-pointer group"
-      style={{
-        background: "rgba(var(--secondary-rgb), 0.7)",
-        backdropFilter: isDragging ? "none" : "blur(8px)",
-        border: isMobile ? "2px solid rgba(var(--accent-rgb), 0.3)" : "1px solid rgba(var(--accent-rgb), 0.2)",
-        height: isMobile ? "420px" : "350px",
-        opacity: isShrunk ? 0.6 : 1,
-        zIndex: isHovered ? 20 : 1,
-        boxShadow: isDragging ? "none" : (isHovered
-          ? "0 8px 32px rgba(0, 0, 0, 0.4)"
-          : "0 2px 8px rgba(0, 0, 0, 0.2)"),
-        pointerEvents: isDragging ? "none" : "auto",
-        transition: isDragging ? "none" : "all 0.4s ease",
-      }}
+      ref={cardRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={handleCardClick}
+      onClick={handleClick}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: 8,
+        cursor: "pointer",
+        height: isMobile ? 420 : 350,
+        background: "rgba(10, 10, 12, 0.85)",
+        border: `1px solid rgba(255,255,255,${isHovered ? 0.18 : 0.07})`,
+        transition: isDragging
+          ? "none"
+          : "border-color 0.32s ease, box-shadow 0.32s ease",
+        boxShadow: isHovered
+          ? "0 12px 40px rgba(0,0,0,0.55)"
+          : "0 2px 8px rgba(0,0,0,0.25)",
+        willChange: isHovered || showVideo ? "transform" : "auto",
+        contain: "paint",
+        pointerEvents: isDragging ? "none" : "auto",
+      }}
     >
-      {/* Default Image Background */}
-      {project.imageUrl && (
-        <img
-          src={project.imageUrl}
-          alt={project.title}
-          className="absolute inset-0 w-full h-full transition-opacity duration-500"
-          style={{
-            opacity: showVideo ? 0 : 1,
-            pointerEvents: 'none',
-            objectFit: 'cover',
-            objectPosition: 'center',
-            backgroundColor: '#070707',
-            transform: isHovered && !isMobile ? 'scale(1.1)' : 'scale(1)',
-            transition: 'transform 0.5s ease',
-          }}
-        />
-      )}
+      {/* Thumbnail image */}
+      <img
+        src={project.imageUrl}
+        alt={project.title}
+        loading="lazy"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center",
+          opacity: videoVisible && videoReady ? 0 : 1,
+          transition: "opacity 0.3s ease",
+          transform: "translateZ(0)",
+        }}
+      />
 
-      {/* Video Background */}
+      {/* Video */}
       <video
         ref={videoRef}
-        className="absolute inset-0 w-full h-full transition-opacity duration-500"
-        style={{
-          opacity: showVideo && !isDragging ? 0.9 : 0,
-          pointerEvents: 'none',
-          objectFit: 'cover',
-          objectPosition: 'center',
-          backgroundColor: '#070707',
-          zIndex: 5,
-          transform: isHovered && !isMobile ? 'scale(1.1)' : 'scale(1)',
-          transition: 'transform 0.5s ease',
-        }}
         loop
         muted
         playsInline
         preload="none"
+        poster={project.imageUrl}
         src={project.videoUrl}
-        onClick={() => {
-          if (videoRef.current) {
-            if (videoRef.current.paused) {
-              videoRef.current.play().catch(() => {});
-            } else {
-              videoRef.current.pause();
-              setVideoPlayed(false);
-            }
-          }
-        }}
-        onPlay={() => {
-          if (onCardClick) onCardClick();
+        onCanPlay={() => setVideoReady(true)}
+        onLoadedMetadata={() => setVideoReady(true)}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center",
+          opacity: videoVisible && videoReady ? 1 : 0,
+          transition: "opacity 0.28s ease",
+          transform: "translateZ(0)",
+          zIndex: 2,
+          pointerEvents: "none",
         }}
       />
 
-      {/* Gradient Overlay (non-blocking) */}
+      {/* Overlay gradient — default state */}
       <div
-        className="absolute inset-0 transition-opacity duration-500"
         style={{
-          pointerEvents: 'none',
-          background: isHovered || (isMobile && isActive)
-            ? "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 100%)"
-            : "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%)",
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.4) 55%, rgba(0,0,0,0.15) 100%)",
+          zIndex: 3,
+          pointerEvents: "none",
+          opacity: isHovered || isMobileActive ? 0 : 1,
+          transition: "opacity 0.32s ease",
         }}
       />
 
-      {/* Content */}
-      <div className="relative h-full flex flex-col justify-end p-6 transition-all duration-500"
+      {/* Overlay gradient — hover state */}
+      <div
         style={{
-          pointerEvents: 'auto',
-          zIndex: 20,
-          transition: isDragging ? "none" : "all 0.4s ease",
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.25) 100%)",
+          zIndex: 3,
+          pointerEvents: "none",
+          opacity: isHovered || isMobileActive ? 1 : 0,
+          transition: "opacity 0.32s ease",
+        }}
+      />
+
+      {/* Card content */}
+      <div
+        style={{
+          position: "relative",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          padding: 24,
+          zIndex: 10,
         }}
       >
+        {/* Category tag */}
         <div
-          className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-2 font-normal transition-all duration-500"
           style={{
-            opacity: isHovered || showVideo || isMobileActive ? 0 : 1,
-            transform: isHovered ? "translateY(-10px)" : "translateY(0)",
+            fontSize: "0.7rem",
+            color: "rgba(200,200,200,0.7)",
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
+            marginBottom: 6,
+            opacity: showVideo ? 0 : 1,
+            transform: `translateY(${showVideo ? -6 : 0}px)`,
+            transition: "opacity 0.28s ease, transform 0.28s ease",
           }}
         >
           {project.category}
         </div>
-        
+
+        {/* Title */}
         <h3
-          className="m-0 font-light text-[var(--light)] tracking-tight transition-all duration-500"
           style={{
-            fontSize: isMobileActive
-              ? "clamp(1.8rem, 7vw, 2.6rem)"
-              : isHovered
-              ? "clamp(1.25rem, 5vw, 2rem)"
-              : isMobile
-              ? "clamp(1rem, 4vw, 1.25rem)"
-              : "1.5rem",
-            transform: isMobileActive
-              ? "translateY(20px)"
-              : showVideo && !isMobile
-              ? "translateY(30px)"
-              : isHovered
-              ? "translateY(20px)"
-              : "translateY(0)",
-            lineHeight: '1.05',
-            marginBottom: isMobileActive ? "0px" : showVideo ? '20px' : '12px',
+            margin: 0,
+            fontWeight: 300,
+            color: "var(--light, #fff)",
+            letterSpacing: "-0.01em",
+            lineHeight: 1.05,
+            fontSize: isMobile ? "clamp(1rem, 4vw, 1.25rem)" : "1.4rem",
+            transform: `translateY(${showVideo ? 28 : isHovered ? 24 : 0}px)`,
+            marginBottom: 10,
+            transition: "transform 0.32s ease",
           }}
         >
           {project.title}
         </h3>
 
+        {/* Description */}
         <p
-          className="m-0 mb-4 text-[#9ca3a2] leading-relaxed font-light transition-all duration-500"
           style={{
-            fontSize: isMobile ? 'clamp(0.8rem, 3.2vw, 0.95rem)' : '0.95rem',
-            opacity: isMobileActive ? 0 : showVideo ? 0 : 1,
-            transform: isMobileActive ? "translateY(0)" : isHovered ? "translateY(-10px)" : "translateY(0)",
-            maxHeight: isMobileActive ? "0px" : showVideo ? "0" : "200px",
+            margin: 0,
+            marginBottom: 12,
+            color: "#9ca3a2",
+            fontSize: isMobile ? "clamp(0.8rem, 3.2vw, 0.92rem)" : "0.9rem",
+            lineHeight: 1.55,
+            fontWeight: 300,
+            opacity: showVideo ? 0 : 1,
+            transform: `translateY(${isHovered ? -8 : 0}px)`,
+            transition: "opacity 0.28s ease, transform 0.28s ease",
+            visibility: showVideo ? "hidden" : "visible",
           }}
         >
           {project.description}
         </p>
 
+        {/* CTA */}
         <a
           href={project.link}
-          className="inline-flex items-center gap-2 text-white text-sm uppercase tracking-wide font-normal no-underline transition-all duration-300 mt-4"
+          target="_blank"
+          rel="noopener noreferrer"
           style={{
-            opacity: 1,
-            transform: showVideo ? (isMobile ? "translateY(0)" : "translateY(20px)") : isHovered ? "translateY(0)" : "translateY(10px)",
-            pointerEvents: 'auto',
-            zIndex: 15,
-            color: 'white',
-            textShadow: "0 0 12px rgba(255, 255, 255, 0.8)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            color: "#fff",
+            fontSize: "0.78rem",
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            fontWeight: 400,
+            textDecoration: "none",
+            textShadow: "0 0 12px rgba(255,255,255,0.7)",
+            opacity: isHovered || isMobileActive ? 1 : 0.6,
+            transform: `translateY(${showVideo ? 0 : isHovered ? 0 : 6}px)`,
+            transition: "opacity 0.28s ease, transform 0.28s ease, gap 0.2s ease",
+            pointerEvents: "auto",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.gap = "12px";
-            e.currentTarget.style.textShadow = "0 0 16px rgba(255, 255, 255, 1)";
+            (e.currentTarget as HTMLElement).style.gap = "14px";
+            (e.currentTarget as HTMLElement).style.textShadow = "0 0 18px rgba(255,255,255,1)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.gap = "8px";
-            e.currentTarget.style.textShadow = "0 0 12px rgba(255, 255, 255, 0.8)";
+            (e.currentTarget as HTMLElement).style.gap = "8px";
+            (e.currentTarget as HTMLElement).style.textShadow = "0 0 12px rgba(255,255,255,0.7)";
           }}
+          onClick={(e) => e.stopPropagation()}
         >
-          View Project
-          <span style={{ fontSize: "1.2rem", color: 'white' }}>→</span>
+          View Project <span style={{ fontSize: "1.1rem" }}>→</span>
         </a>
       </div>
 
-      {/* Hover Border Effect */}
+      {/* Hover border glow */}
       <div
-        className="absolute inset-0 border-2 transition-all duration-500 pointer-events-none rounded-lg"
         style={{
-          borderColor: isHovered
-            ? "rgba(var(--accent-rgb), 0.6)"
-            : "transparent",
+          position: "absolute",
+          inset: 0,
+          borderRadius: 8,
+          border: `1.5px solid rgba(255,255,255,${isHovered ? 0.2 : 0})`,
+          pointerEvents: "none",
+          zIndex: 15,
+          transition: "border-color 0.32s ease",
         }}
       />
     </div>
